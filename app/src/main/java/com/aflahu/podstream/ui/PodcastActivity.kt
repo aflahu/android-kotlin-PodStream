@@ -11,6 +11,7 @@ import androidx.appcompat.widget.SearchView
 import com.aflahu.podstream.R
 import com.aflahu.podstream.repository.ItunesRepo
 import com.aflahu.podstream.service.ItunesService
+import kotlinx.android.synthetic.main.activity_podcast.*
 
 class PodcastActivity : AppCompatActivity() {
     private val TAG = javaClass.simpleName
@@ -18,8 +19,12 @@ class PodcastActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_podcast)
+        setupToolbar()
 
+    }
 
+    private fun setupToolbar() {
+        setSupportActionBar(toolbar)
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
