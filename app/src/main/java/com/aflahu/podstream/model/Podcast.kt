@@ -8,5 +8,5 @@ data class Podcast(
     var feedDesc: String = "",
     var imageUrl: String = "",
     var lastUpdated: Date = Date(),
-    var episode: List<Episode> = listOf()
+    var episodes: List<Episode> = listOf()
 )
