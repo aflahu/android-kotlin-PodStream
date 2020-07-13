@@ -17,6 +17,7 @@ import com.aflahu.podstream.R
 import com.aflahu.podstream.adapter.PodcastListAdapter
 import com.aflahu.podstream.repository.ItunesRepo
 import com.aflahu.podstream.repository.PodcastRepo
+import com.aflahu.podstream.service.FeedService
 import com.aflahu.podstream.service.ItunesService
 import com.aflahu.podstream.viewmodel.PodcastViewModel
 import com.aflahu.podstream.viewmodel.SearchViewModel
@@ -90,7 +91,9 @@ class PodcastActivity : AppCompatActivity(), PodcastListAdapter.PodcastListAdapt
     private fun setupViewModels() {
         val service = ItunesService.instance
         searchViewModel.itunesRepo = ItunesRepo(service)
-        podcastViewModel.podcastRepo = PodcastRepo()
+
+        val rssService = FeedService.instance
+        podcastViewModel.podcastRepo = PodcastRepo(rssService)
     }
 
     private fun addBackStackListener() {
