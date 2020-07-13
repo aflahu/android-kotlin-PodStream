@@ -15,6 +15,7 @@ import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.aflahu.podstream.R
 import com.aflahu.podstream.adapter.PodcastListAdapter
+import com.aflahu.podstream.db.PodStreamDatabase
 import com.aflahu.podstream.repository.ItunesRepo
 import com.aflahu.podstream.repository.PodcastRepo
 import com.aflahu.podstream.service.FeedService
@@ -93,7 +94,9 @@ class PodcastActivity : AppCompatActivity(), PodcastListAdapter.PodcastListAdapt
         searchViewModel.itunesRepo = ItunesRepo(service)
 
         val rssService = FeedService.instance
-        podcastViewModel.podcastRepo = PodcastRepo(rssService)
+        val db = PodStreamDatabase.getInstance(this)
+        val podcastDao = db.podcastDao()
+        podcastViewModel.podcastRepo = PodcastRepo(rssService, podcastDao)
     }
 
     private fun addBackStackListener() {
