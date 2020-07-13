@@ -16,7 +16,7 @@ import java.util.*
 )
 data class Episode(
     @PrimaryKey var guid: String = "",
-    var podcastd: Long? = null,
+    var podcastId: Long? = null,
     var title: String = "",
     var description: String = "",
     var mediaUrl: String = "",
