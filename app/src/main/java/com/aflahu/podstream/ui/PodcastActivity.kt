@@ -24,7 +24,8 @@ import com.aflahu.podstream.viewmodel.PodcastViewModel
 import com.aflahu.podstream.viewmodel.SearchViewModel
 import kotlinx.android.synthetic.main.activity_podcast.*
 
-class PodcastActivity : AppCompatActivity(), PodcastListAdapter.PodcastListAdapterListener {
+class PodcastActivity : AppCompatActivity(), PodcastListAdapter.PodcastListAdapterListener,
+    PodcastDetailsFragment.OnPodcastDetailsListener {
     private val TAG = javaClass.simpleName
     private val searchViewModel by viewModels<SearchViewModel>()
     private val podcastViewModel by viewModels<PodcastViewModel>()
@@ -39,6 +40,11 @@ class PodcastActivity : AppCompatActivity(), PodcastListAdapter.PodcastListAdapt
         updateControls()
         handleIntent(intent)
         addBackStackListener()
+    }
+
+    override fun onSubscribe() {
+        podcastViewModel.saveActivePodcast()
+        supportFragmentManager.popBackStack()
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {

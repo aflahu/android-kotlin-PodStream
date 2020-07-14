@@ -1,5 +1,6 @@
 package com.aflahu.podstream.ui
 
+import android.content.Context
 import android.os.Bundle
 import android.text.method.ScrollingMovementMethod
 import android.view.*
@@ -12,12 +13,23 @@ import com.aflahu.podstream.adapter.EpisodeListAdapter
 import com.aflahu.podstream.viewmodel.PodcastViewModel
 import com.bumptech.glide.Glide
 import kotlinx.android.synthetic.main.fragment_podcast_details.*
+import java.lang.RuntimeException
 import java.util.zip.Inflater
 
 class PodcastDetailsFragment : Fragment() {
 
     private val podcastViewModel: PodcastViewModel by activityViewModels()
     private lateinit var episodeListAdapter: EpisodeListAdapter
+    private var listener: OnPodcastDetailsListener? = null
+
+    override fun onAttach(context: Context) {
+        super.onAttach(context)
+        if (context is OnPodcastDetailsListener) {
+            listener = context
+        } else {
+            throw RuntimeException(context.toString() + " must implement OnPodcastDetailsListener")
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -41,6 +53,18 @@ class PodcastDetailsFragment : Fragment() {
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
         super.onCreateOptionsMenu(menu, inflater)
         inflater.inflate(R.menu.menu_details, menu)
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        when (item.itemId) {
+            R.id.menu_feed_action -> {
+                podcastViewModel.activePodcastViewData?.feedUrl?.let {
+                    listener?.onSubscribe()
+                }
+                return true
+            }
+            else -> return super.onOptionsItemSelected(item)
+        }
     }
 
     private fun updateControls() {
@@ -70,6 +94,10 @@ class PodcastDetailsFragment : Fragment() {
         episodeListAdapter = EpisodeListAdapter(podcastViewModel.activePodcastViewData?.episodes)
         episodeRecyclerView.adapter = episodeListAdapter
 
+    }
+
+    interface OnPodcastDetailsListener {
+        fun onSubscribe()
     }
 
     companion object {
