@@ -2,17 +2,25 @@ package com.aflahu.podstream.viewmodel
 
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.Transformations
 import com.aflahu.podstream.model.Episode
 import com.aflahu.podstream.model.Podcast
 import com.aflahu.podstream.repository.PodcastRepo
+import com.aflahu.podstream.util.DateUtils
 import com.aflahu.podstream.viewmodel.SearchViewModel.PodcastSummaryViewData
 import java.util.*
 
 class PodcastViewModel(application: Application) : AndroidViewModel(application) {
     var podcastRepo: PodcastRepo? = null
     var activePodcastViewData: PodcastViewData? = null
+    private var activePodcast: Podcast? = null
+    var livePodcastData: LiveData<List<PodcastSummaryViewData>>? = null
 
-    fun getPodcast(podcastSummaryViewData: PodcastSummaryViewData, callback: (PodcastViewData?) -> Unit) {
+    fun getPodcast(
+        podcastSummaryViewData: PodcastSummaryViewData,
+        callback: (PodcastViewData?) -> Unit
+    ) {
         val repo = podcastRepo ?: return
         val feedUrl = podcastSummaryViewData.feedUrl ?: return
 
@@ -21,9 +29,38 @@ class PodcastViewModel(application: Application) : AndroidViewModel(application)
                 it.feedTitle = podcastSummaryViewData.name ?: ""
                 it.imageUrl = podcastSummaryViewData.imageUrl ?: ""
                 activePodcastViewData = podcastToPodcastView(it)
+                activePodcast = it
                 callback(activePodcastViewData)
             }
         }
+    }
+
+    fun getPodcasts(): LiveData<List<PodcastSummaryViewData>>? {
+        val repo = podcastRepo ?: return null
+
+        if (livePodcastData == null) {
+            val liveData = repo.getAll()
+
+            livePodcastData = Transformations.map(liveData){podcastList ->
+                podcastList.map { podcast ->
+                    podcastToSummaryView(podcast)
+                }
+            }
+        }
+    }
+
+    fun saveActivePodcast() {
+        val repo = podcastRepo ?: return
+        activePodcast?.let { repo.save(it) }
+    }
+
+    private fun podcastToSummaryView(podcast: Podcast): PodcastSummaryViewData {
+        return PodcastSummaryViewData(
+            podcast.feedTitle,
+            DateUtils.dateToShortDate(podcast.lastUpdated),
+            podcast.imageUrl,
+            podcast.feedUrl
+        )
     }
 
     private fun podcastToPodcastView(podcast: Podcast): PodcastViewData {
