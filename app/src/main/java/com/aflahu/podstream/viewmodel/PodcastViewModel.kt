@@ -45,8 +45,11 @@ class PodcastViewModel(application: Application) : AndroidViewModel(application)
                 podcastList.map { podcast ->
                     podcastToSummaryView(podcast)
                 }
+
             }
         }
+
+        return livePodcastData
     }
 
     fun saveActivePodcast() {
