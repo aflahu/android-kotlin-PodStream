@@ -14,20 +14,34 @@ import kotlinx.coroutines.launch
 
 class PodcastRepo(private var feedService: FeedService, private var podcastDao: PodcastDao) {
     fun getPodcast(feedUrl: String, callback: (Podcast?) -> Unit) {
-        val rssFeedService = RssFeedService()
+        GlobalScope.launch {
+            val podcast = podcastDao.loadPodcast(feedUrl)
 
-        rssFeedService.getFeed(feedUrl) { feedResponse ->
-            var podcast: Podcast? = null
-            if (feedResponse != null) {
-                podcast = rssResponseToPodcast(feedUrl, "", feedResponse)
-            }
-            GlobalScope.launch(Dispatchers.Main) {
-                callback(podcast)
+            if (podcast != null) {
+                podcast.id?.let {
+                    podcast.episodes = podcastDao.loadEpisodes(it)
+                    GlobalScope.launch(Dispatchers.Main) {
+                        callback(podcast)
+                    }
+                }
+            } else {
+
+                val rssFeedService = RssFeedService()
+
+                rssFeedService.getFeed(feedUrl) { feedResponse ->
+                    var podcast: Podcast? = null
+                    if (feedResponse != null) {
+                        podcast = rssResponseToPodcast(feedUrl, "", feedResponse)
+                    }
+                    GlobalScope.launch(Dispatchers.Main) {
+                        callback(podcast)
+                    }
+                }
             }
         }
     }
 
-    fun getAll(): LiveData<List<Podcast>>{
+    fun getAll(): LiveData<List<Podcast>> {
         return podcastDao.loadPodcasts()
     }
 
@@ -39,6 +53,12 @@ class PodcastRepo(private var feedService: FeedService, private var podcastDao: 
                 episode.podcastId = podcastId
                 podcastDao.insertEpisode(episode)
             }
+        }
+    }
+
+    fun delete(podcast: Podcast) {
+        GlobalScope.launch {
+            podcastDao.deletePodcast(podcast)
         }
     }
 

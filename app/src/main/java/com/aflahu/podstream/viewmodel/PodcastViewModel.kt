@@ -41,7 +41,7 @@ class PodcastViewModel(application: Application) : AndroidViewModel(application)
         if (livePodcastData == null) {
             val liveData = repo.getAll()
 
-            livePodcastData = Transformations.map(liveData){podcastList ->
+            livePodcastData = Transformations.map(liveData) { podcastList ->
                 podcastList.map { podcast ->
                     podcastToSummaryView(podcast)
                 }
@@ -57,6 +57,13 @@ class PodcastViewModel(application: Application) : AndroidViewModel(application)
         activePodcast?.let { repo.save(it) }
     }
 
+    fun deleteActivePodcast() {
+        val repo = podcastRepo ?: return
+        activePodcast?.let {
+            repo.delete(it)
+        }
+    }
+
     private fun podcastToSummaryView(podcast: Podcast): PodcastSummaryViewData {
         return PodcastSummaryViewData(
             podcast.feedTitle,
@@ -68,7 +75,7 @@ class PodcastViewModel(application: Application) : AndroidViewModel(application)
 
     private fun podcastToPodcastView(podcast: Podcast): PodcastViewData {
         return PodcastViewData(
-            false,
+            podcast.id != null,
             podcast.feedTitle,
             podcast.feedUrl,
             podcast.feedDesc,

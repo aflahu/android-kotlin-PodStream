@@ -11,6 +11,7 @@ import android.view.View
 import androidx.activity.viewModels
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.widget.SearchView
+import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.aflahu.podstream.R
@@ -38,12 +39,18 @@ class PodcastActivity : AppCompatActivity(), PodcastListAdapter.PodcastListAdapt
         setupToolbar()
         setupViewModels()
         updateControls()
+        setupPodcastListView()
         handleIntent(intent)
         addBackStackListener()
     }
 
     override fun onSubscribe() {
         podcastViewModel.saveActivePodcast()
+        supportFragmentManager.popBackStack()
+    }
+
+    override fun onUnsubscribe() {
+        podcastViewModel.deleteActivePodcast()
         supportFragmentManager.popBackStack()
     }
 
@@ -54,8 +61,18 @@ class PodcastActivity : AppCompatActivity(), PodcastListAdapter.PodcastListAdapt
         searchMenuItem = menu.findItem(R.id.search_item)
         val searchView = searchMenuItem.actionView as SearchView
 
-        val searchManager = getSystemService(Context.SEARCH_SERVICE) as SearchManager
+        searchMenuItem.setOnActionExpandListener(object : MenuItem.OnActionExpandListener {
+            override fun onMenuItemActionExpand(item: MenuItem?): Boolean {
+                return true
+            }
 
+            override fun onMenuItemActionCollapse(item: MenuItem?): Boolean {
+                showSubcribedPodcasts()
+                return true
+            }
+        })
+
+        val searchManager = getSystemService(Context.SEARCH_SERVICE) as SearchManager
         searchView.setSearchableInfo(searchManager.getSearchableInfo(componentName))
 
         if (supportFragmentManager.backStackEntryCount > 0) {
@@ -103,6 +120,14 @@ class PodcastActivity : AppCompatActivity(), PodcastListAdapter.PodcastListAdapt
         val db = PodStreamDatabase.getInstance(this)
         val podcastDao = db.podcastDao()
         podcastViewModel.podcastRepo = PodcastRepo(rssService, podcastDao)
+    }
+
+    private fun setupPodcastListView() {
+        podcastViewModel.getPodcasts()?.observe(this, Observer {
+            if (it != null) {
+                showSubcribedPodcasts()
+            }
+        })
     }
 
     private fun addBackStackListener() {
@@ -155,6 +180,15 @@ class PodcastActivity : AppCompatActivity(), PodcastListAdapter.PodcastListAdapt
         searchMenuItem.isVisible = false
     }
 
+    private fun showSubcribedPodcasts() {
+        val podcasts = podcastViewModel.getPodcasts()?.value
+
+        if (podcasts != null) {
+            toolbar.title = getString(R.string.subscribed_podcasts)
+            podcastListAdapter.setSearchData(podcasts)
+        }
+    }
+
     private fun createPodcastDetailsFragment(): PodcastDetailsFragment {
         var podcastDetailsFragment =
             supportFragmentManager.findFragmentByTag(TAG_DETAILS_FRAGMENT) as PodcastDetailsFragment?
@@ -179,6 +213,7 @@ class PodcastActivity : AppCompatActivity(), PodcastListAdapter.PodcastListAdapt
         AlertDialog.Builder(this).setMessage(message)
             .setPositiveButton(getString(R.string.ok_button), null).create().show()
     }
+
 
     companion object {
         private const val TAG_DETAILS_FRAGMENT = "DetailsFragment"
