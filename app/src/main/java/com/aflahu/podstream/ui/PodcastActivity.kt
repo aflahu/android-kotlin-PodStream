@@ -14,6 +14,7 @@ import androidx.appcompat.widget.SearchView
 import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.work.*
 import com.aflahu.podstream.R
 import com.aflahu.podstream.adapter.PodcastListAdapter
 import com.aflahu.podstream.db.PodStreamDatabase
@@ -23,7 +24,9 @@ import com.aflahu.podstream.service.FeedService
 import com.aflahu.podstream.service.ItunesService
 import com.aflahu.podstream.viewmodel.PodcastViewModel
 import com.aflahu.podstream.viewmodel.SearchViewModel
+import com.aflahu.podstream.worker.EpisodeUpdateWorker
 import kotlinx.android.synthetic.main.activity_podcast.*
+import java.util.concurrent.TimeUnit
 
 class PodcastActivity : AppCompatActivity(), PodcastListAdapter.PodcastListAdapterListener,
     PodcastDetailsFragment.OnPodcastDetailsListener {
@@ -42,6 +45,7 @@ class PodcastActivity : AppCompatActivity(), PodcastListAdapter.PodcastListAdapt
         setupPodcastListView()
         handleIntent(intent)
         addBackStackListener()
+        scheduleJobs()
     }
 
     override fun onSubscribe() {
@@ -106,6 +110,24 @@ class PodcastActivity : AppCompatActivity(), PodcastListAdapter.PodcastListAdapt
         super.onNewIntent(intent)
         setIntent(intent)
         handleIntent(intent)
+    }
+
+    private fun scheduleJobs() {
+        val constraints: Constraints = Constraints.Builder().apply {
+            setRequiredNetworkType(NetworkType.CONNECTED)
+            setRequiresCharging(true)
+        }.build()
+
+        val request =
+            PeriodicWorkRequestBuilder<EpisodeUpdateWorker>(1, TimeUnit.HOURS).setConstraints(
+                constraints
+            ).build()
+
+        WorkManager.getInstance(this).enqueueUniquePeriodicWork(
+            TAG_EPISODE_UPDATE_JOB,
+            ExistingPeriodicWorkPolicy.REPLACE,
+            request
+        )
     }
 
     private fun setupToolbar() {
@@ -217,5 +239,6 @@ class PodcastActivity : AppCompatActivity(), PodcastListAdapter.PodcastListAdapt
 
     companion object {
         private const val TAG_DETAILS_FRAGMENT = "DetailsFragment"
+        private const val TAG_EPISODE_UPDATE_JOB = "com.aflahu.podstream.episodes"
     }
 }
