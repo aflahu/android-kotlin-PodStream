@@ -44,6 +44,7 @@ class PodcastDetailsFragment : Fragment() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setHasOptionsMenu(true)
+        initMediaBrowser()
     }
 
     override fun onCreateView(
@@ -127,7 +128,17 @@ class PodcastDetailsFragment : Fragment() {
         mediaController.registerCallback(mediaControllerCallback!!)
     }
 
-    inner class MediaBrowserCallBacks: MediaBrowserCompat.ConnectionCallback() {
+    private fun initMediaBrowser() {
+        val fragmentActivity = activity as FragmentActivity
+        mediaBrowser = MediaBrowserCompat(
+            fragmentActivity,
+            ComponentName(fragmentActivity, PodStreamMediaService::class.java),
+            MediaBrowserCallBacks(),
+            null
+        )
+    }
+
+    inner class MediaBrowserCallBacks : MediaBrowserCompat.ConnectionCallback() {
         override fun onConnected() {
             super.onConnected()
 
