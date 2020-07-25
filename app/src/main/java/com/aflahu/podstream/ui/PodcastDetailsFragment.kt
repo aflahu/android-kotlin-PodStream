@@ -32,6 +32,12 @@ class PodcastDetailsFragment : Fragment() {
     private lateinit var mediaBrowser: MediaBrowserCompat
     private var mediaControllerCallback: MediaControllerCallback? = null
 
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setHasOptionsMenu(true)
+        initMediaBrowser()
+    }
+
     override fun onAttach(context: Context) {
         super.onAttach(context)
         if (context is OnPodcastDetailsListener) {
@@ -41,10 +47,14 @@ class PodcastDetailsFragment : Fragment() {
         }
     }
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setHasOptionsMenu(true)
-        initMediaBrowser()
+    override fun onStop() {
+        super.onStop()
+        val fragmentActivity = activity as FragmentActivity
+        if (MediaControllerCompat.getMediaController(fragmentActivity) != null){
+            mediaControllerCallback?.let {
+                MediaControllerCompat.getMediaController(fragmentActivity).unregisterCallback(it)
+            }
+        }
     }
 
     override fun onCreateView(
