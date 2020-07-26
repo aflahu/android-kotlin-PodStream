@@ -28,7 +28,9 @@ class PodStreamMediaService : MediaBrowserServiceCompat() {
         parentId: String,
         result: Result<MutableList<MediaBrowserCompat.MediaItem>>
     ) {
-        TODO("Not yet implemented")
+        if (parentId.equals(PODSTREAM_EMPTY_ROOT_MEDIA_ID)) {
+            result.sendResult(null)
+        }
     }
 
     override fun onGetRoot(
@@ -36,8 +38,10 @@ class PodStreamMediaService : MediaBrowserServiceCompat() {
         clientUid: Int,
         rootHints: Bundle?
     ): BrowserRoot? {
-        TODO("Not yet implemented")
-        return null
+        return MediaBrowserServiceCompat.BrowserRoot(PODSTREAM_EMPTY_ROOT_MEDIA_ID, null)
     }
 
+    companion object {
+        private const val PODSTREAM_EMPTY_ROOT_MEDIA_ID = "podstream_empty_root_media_id"
+    }
 }
