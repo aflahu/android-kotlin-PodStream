@@ -2,6 +2,7 @@ package com.aflahu.podstream.ui
 
 import android.content.ComponentName
 import android.content.Context
+import android.net.Uri
 import android.os.Bundle
 import android.support.v4.media.MediaBrowserCompat
 import android.support.v4.media.MediaMetadataCompat
@@ -23,7 +24,7 @@ import com.bumptech.glide.Glide
 import kotlinx.android.synthetic.main.fragment_podcast_details.*
 import java.lang.RuntimeException
 
-class PodcastDetailsFragment : Fragment() {
+class PodcastDetailsFragment : Fragment(), EpisodeListAdapter.EpisodeListAdapterListener {
 
     private val podcastViewModel: PodcastViewModel by activityViewModels()
     private lateinit var episodeListAdapter: EpisodeListAdapter
@@ -31,6 +32,21 @@ class PodcastDetailsFragment : Fragment() {
     private var menuItem: MenuItem? = null
     private lateinit var mediaBrowser: MediaBrowserCompat
     private var mediaControllerCallback: MediaControllerCallback? = null
+
+    override fun onSelectedEpisode(episodeViewData: PodcastViewModel.EpisodeViewData) {
+        val fragmentActivity = activity as FragmentActivity
+        val controller = MediaControllerCompat.getMediaController(fragmentActivity)
+
+        if (controller.playbackState != null) {
+            if (controller.playbackState.state == PlaybackStateCompat.STATE_PLAYING) {
+                controller.transportControls.pause()
+            } else {
+                startPlaying(episodeViewData)
+            }
+        } else {
+            startPlaying(episodeViewData)
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -50,7 +66,7 @@ class PodcastDetailsFragment : Fragment() {
     override fun onStop() {
         super.onStop()
         val fragmentActivity = activity as FragmentActivity
-        if (MediaControllerCompat.getMediaController(fragmentActivity) != null){
+        if (MediaControllerCompat.getMediaController(fragmentActivity) != null) {
             mediaControllerCallback?.let {
                 MediaControllerCompat.getMediaController(fragmentActivity).unregisterCallback(it)
             }
@@ -118,7 +134,8 @@ class PodcastDetailsFragment : Fragment() {
         episodeRecyclerView.addItemDecoration(deviderItemDecoration)
 
         // 3
-        episodeListAdapter = EpisodeListAdapter(podcastViewModel.activePodcastViewData?.episodes)
+        episodeListAdapter =
+            EpisodeListAdapter(podcastViewModel.activePodcastViewData?.episodes, this)
         episodeRecyclerView.adapter = episodeListAdapter
 
     }
@@ -146,6 +163,12 @@ class PodcastDetailsFragment : Fragment() {
             MediaBrowserCallBacks(),
             null
         )
+    }
+
+    private fun startPlaying(episodeViewData: PodcastViewModel.EpisodeViewData) {
+        val fragmentActivity = activity as FragmentActivity
+        val controller = MediaControllerCompat.getMediaController(fragmentActivity)
+        controller.transportControls.playFromUri(Uri.parse(episodeViewData.mediaUrl), null)
     }
 
     inner class MediaBrowserCallBacks : MediaBrowserCompat.ConnectionCallback() {
