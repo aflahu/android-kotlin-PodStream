@@ -37,7 +37,7 @@ class PodcastDetailsFragment : Fragment(), EpisodeListAdapter.EpisodeListAdapter
         val fragmentActivity = activity as FragmentActivity
         val controller = MediaControllerCompat.getMediaController(fragmentActivity)
 
-        if (controller.playbackState != null) {
+        if (controller?.playbackState != null) {
             if (controller.playbackState.state == PlaybackStateCompat.STATE_PLAYING) {
                 controller.transportControls.pause()
             } else {
